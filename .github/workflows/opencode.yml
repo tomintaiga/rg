@@ -20,17 +20,18 @@ jobs:
       pull-requests: write
       issues: write
     env:
-      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY || secrets.OPENAI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.ZAI_API_KEY || secrets.OPENAI_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check OpenCode credentials
         id: credentials
         run: |
-          if [ -n "$OPENCODE_API_KEY" ]; then
+          if [ -n "$ZAI_API_KEY" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping opencode because OPENCODE_API_KEY is not configured."
+            echo "Skipping opencode because ZAI_API_KEY or OPENAI_API_KEY is not configured."
           fi
 
       - name: Checkout repository
@@ -43,5 +44,5 @@ jobs:
         if: steps.credentials.outputs.enabled == 'true'
         uses: anomalyco/opencode/github@latest
         with:
-          model: opencode/glm-5.1
+          model: zai/glm-5.1
           use_github_token: true
