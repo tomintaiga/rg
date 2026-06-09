@@ -44,6 +44,23 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: DEBUG verify key against coding endpoint
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          echo "ZHIPU_API_KEY length: ${#ZHIPU_API_KEY}"
+          # Detect a stray trailing newline/CR or surrounding whitespace in the secret.
+          printf '%s' "$ZHIPU_API_KEY" | wc -c | sed 's/^/printf-byte-count: /'
+          case "$ZHIPU_API_KEY" in
+            *' '*|*'	'*) echo "WARNING: key contains whitespace" ;;
+          esac
+          echo "--- coding endpoint (api.z.ai/api/coding/paas/v4) ---"
+          curl -sS -o /tmp/body.json -w "HTTP %{http_code}\n" \
+            https://api.z.ai/api/coding/paas/v4/chat/completions \
+            -H "Authorization: Bearer ${ZHIPU_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'
+          cat /tmp/body.json; echo
+
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
         uses: anomalyco/opencode/github@latest
