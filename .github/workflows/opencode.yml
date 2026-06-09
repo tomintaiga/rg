@@ -53,13 +53,20 @@ jobs:
           case "$ZHIPU_API_KEY" in
             *' '*|*'	'*) echo "WARNING: key contains whitespace" ;;
           esac
-          echo "--- coding endpoint (api.z.ai/api/coding/paas/v4) ---"
-          curl -sS -o /tmp/body.json -w "HTTP %{http_code}\n" \
+          # Reveal whitespace POSITIONS only (every non-space char -> x; tabs shown as ^I):
+          echo -n "whitespace map: "; printf '%s' "$ZHIPU_API_KEY" | sed 's/[^[:space:]]/x/g' | cat -A
+          CLEAN="${ZHIPU_API_KEY//[[:space:]]/}"
+          echo "cleaned length: ${#CLEAN}"
+          echo "--- coding endpoint, RAW secret ---"
+          curl -sS -o /tmp/r.json -w "HTTP %{http_code}\n" \
             https://api.z.ai/api/coding/paas/v4/chat/completions \
-            -H "Authorization: Bearer ${ZHIPU_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'
-          cat /tmp/body.json; echo
+            -H "Authorization: Bearer ${ZHIPU_API_KEY}" -H "Content-Type: application/json" \
+            -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'; cat /tmp/r.json; echo
+          echo "--- coding endpoint, WHITESPACE-STRIPPED secret ---"
+          curl -sS -o /tmp/c.json -w "HTTP %{http_code}\n" \
+            https://api.z.ai/api/coding/paas/v4/chat/completions \
+            -H "Authorization: Bearer ${CLEAN}" -H "Content-Type: application/json" \
+            -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'; cat /tmp/c.json; echo
 
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
