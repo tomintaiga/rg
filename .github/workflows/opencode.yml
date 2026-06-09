@@ -42,7 +42,7 @@ jobs:
 
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
-        # Pin to the last pre-regression GitHub action revision while @latest exits non-zero after posting.
+        # Pin to the last pre-regression GitHub action revision while @latest exits non-zero after posting its response comment.
         uses: anomalyco/opencode/github@2034fabc7d481b670363b4c8984241bd15505c76
         with:
           model: zai/glm-5.1
