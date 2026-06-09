@@ -43,6 +43,7 @@ jobs:
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
         uses: anomalyco/opencode/github@latest
+        continue-on-error: true
         with:
           model: zai/glm-5.1
-          token: ${{ github.token }}
+          use_github_token: true
