@@ -20,12 +20,12 @@ jobs:
       pull-requests: write
       issues: write
     env:
-      # opencode's `zai` provider authenticates via ZHIPU_API_KEY (per models.dev),
-      # NOT ZAI_API_KEY / OPENAI_API_KEY. Without this the model never authenticates,
+      # opencode's `zai`/`zai-coding-plan` provider authenticates via ZHIPU_API_KEY
+      # (per models.dev), NOT ZAI_API_KEY. Without this the model never authenticates,
       # so the agent returns an empty response and creates no PR.
-      ZHIPU_API_KEY: ${{ secrets.ZAI_API_KEY || secrets.OPENAI_API_KEY }}
+      ZHIPU_API_KEY: ${{ secrets.ZAI_API_KEY }}
       # Kept only so the credential-gate step below can detect a configured key.
-      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY || secrets.OPENAI_API_KEY }}
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check OpenCode credentials
@@ -35,7 +35,7 @@ jobs:
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping opencode because ZAI_API_KEY or OPENAI_API_KEY is not configured."
+            echo "Skipping opencode because ZAI_API_KEY is not configured."
           fi
 
       - name: Checkout repository
@@ -56,7 +56,6 @@ jobs:
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
         uses: anomalyco/opencode/github@latest
-        continue-on-error: true
         with:
           # Coding Plan subscription -> endpoint https://api.z.ai/api/coding/paas/v4
           # (the plain `zai` provider points at the pay-as-you-go /api/paas/v4 endpoint,
