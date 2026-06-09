@@ -44,6 +44,15 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Configure git identity
+        if: steps.credentials.outputs.enabled == 'true'
+        run: |
+          # The @latest opencode action requires a git identity to already exist
+          # (configureGit no longer sets one); without it the commit fails with
+          # "Author identity unknown".
+          git config --global user.name "opencode-agent[bot]"
+          git config --global user.email "opencode-agent[bot]@users.noreply.github.com"
+
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
         uses: anomalyco/opencode/github@latest
