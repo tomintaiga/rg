@@ -44,29 +44,23 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: DEBUG verify key against coding endpoint
+      - name: DEBUG which secret holds a valid coding-plan key
         if: steps.credentials.outputs.enabled == 'true'
+        env:
+          S_ZAI: ${{ secrets.ZAI_API_KEY }}
+          S_OPENAI: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          echo "ZHIPU_API_KEY length: ${#ZHIPU_API_KEY}"
-          # Detect a stray trailing newline/CR or surrounding whitespace in the secret.
-          printf '%s' "$ZHIPU_API_KEY" | wc -c | sed 's/^/printf-byte-count: /'
-          case "$ZHIPU_API_KEY" in
-            *' '*|*'	'*) echo "WARNING: key contains whitespace" ;;
-          esac
-          # Reveal whitespace POSITIONS only (every non-space char -> x; tabs shown as ^I):
-          echo -n "whitespace map: "; printf '%s' "$ZHIPU_API_KEY" | sed 's/[^[:space:]]/x/g' | cat -A
-          CLEAN="${ZHIPU_API_KEY//[[:space:]]/}"
-          echo "cleaned length: ${#CLEAN}"
-          echo "--- coding endpoint, RAW secret ---"
-          curl -sS -o /tmp/r.json -w "HTTP %{http_code}\n" \
-            https://api.z.ai/api/coding/paas/v4/chat/completions \
-            -H "Authorization: Bearer ${ZHIPU_API_KEY}" -H "Content-Type: application/json" \
-            -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'; cat /tmp/r.json; echo
-          echo "--- coding endpoint, WHITESPACE-STRIPPED secret ---"
-          curl -sS -o /tmp/c.json -w "HTTP %{http_code}\n" \
-            https://api.z.ai/api/coding/paas/v4/chat/completions \
-            -H "Authorization: Bearer ${CLEAN}" -H "Content-Type: application/json" \
-            -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'; cat /tmp/c.json; echo
+          probe() {
+            local name="$1" key="$2"
+            echo "=== $name : length=${#key}, whitespace-map=$(printf '%s' "$key" | sed 's/[^[:space:]]/x/g')"
+            curl -sS -o /tmp/b.json -w "    HTTP %{http_code}\n" \
+              https://api.z.ai/api/coding/paas/v4/chat/completions \
+              -H "Authorization: Bearer ${key}" -H "Content-Type: application/json" \
+              -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'
+            head -c 200 /tmp/b.json; echo
+          }
+          probe "ZAI_API_KEY" "$S_ZAI"
+          probe "OPENAI_API_KEY" "$S_OPENAI"
 
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
