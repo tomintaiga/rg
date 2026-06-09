@@ -49,5 +49,8 @@ jobs:
         uses: anomalyco/opencode/github@latest
         continue-on-error: true
         with:
-          model: zai/glm-5.1
+          # Coding Plan subscription -> endpoint https://api.z.ai/api/coding/paas/v4
+          # (the plain `zai` provider points at the pay-as-you-go /api/paas/v4 endpoint,
+          # which rejects coding-plan keys with 401 "token expired or incorrect").
+          model: zai-coding-plan/glm-5.1
           use_github_token: true
