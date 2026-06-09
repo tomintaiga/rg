@@ -19,17 +19,29 @@ jobs:
       contents: write
       pull-requests: write
       issues: write
+    env:
+      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: Check OpenCode credentials
+        id: credentials
+        run: |
+          if [ -n "$OPENCODE_API_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping opencode because OPENCODE_API_KEY is not configured."
+          fi
+
       - name: Checkout repository
+        if: steps.credentials.outputs.enabled == 'true'
         uses: actions/checkout@v6
         with:
           persist-credentials: false
 
       - name: Run opencode
+        if: steps.credentials.outputs.enabled == 'true'
         uses: anomalyco/opencode/github@latest
-        env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: opencode/glm-5.1
           use_github_token: true
