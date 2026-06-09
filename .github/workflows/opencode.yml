@@ -20,8 +20,12 @@ jobs:
       pull-requests: write
       issues: write
     env:
+      # opencode's `zai` provider authenticates via ZHIPU_API_KEY (per models.dev),
+      # NOT ZAI_API_KEY / OPENAI_API_KEY. Without this the model never authenticates,
+      # so the agent returns an empty response and creates no PR.
+      ZHIPU_API_KEY: ${{ secrets.ZAI_API_KEY || secrets.OPENAI_API_KEY }}
+      # Kept only so the credential-gate step below can detect a configured key.
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY || secrets.OPENAI_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.ZAI_API_KEY || secrets.OPENAI_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check OpenCode credentials
