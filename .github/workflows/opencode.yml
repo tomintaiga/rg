@@ -44,24 +44,6 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: DEBUG which secret holds a valid coding-plan key
-        if: steps.credentials.outputs.enabled == 'true'
-        env:
-          S_ZAI: ${{ secrets.ZAI_API_KEY }}
-          S_OPENAI: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          probe() {
-            local name="$1" key="$2"
-            echo "=== $name : length=${#key}, whitespace-map=$(printf '%s' "$key" | sed 's/[^[:space:]]/x/g')"
-            curl -sS -o /tmp/b.json -w "    HTTP %{http_code}\n" \
-              https://api.z.ai/api/coding/paas/v4/chat/completions \
-              -H "Authorization: Bearer ${key}" -H "Content-Type: application/json" \
-              -d '{"model":"glm-4.7","messages":[{"role":"user","content":"ping"}],"max_tokens":1}'
-            head -c 200 /tmp/b.json; echo
-          }
-          probe "ZAI_API_KEY" "$S_ZAI"
-          probe "OPENAI_API_KEY" "$S_OPENAI"
-
       - name: Run opencode
         if: steps.credentials.outputs.enabled == 'true'
         uses: anomalyco/opencode/github@latest
